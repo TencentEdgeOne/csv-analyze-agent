@@ -1,12 +1,18 @@
 /**
- * History 持久化：通过 EdgeOne context.store 写入轻量分析摘要。
+ * History 持久化：通过 EdgeOne context.store 写入分析摘要 + 完整制品。
  *
- * 采用 append-only 快照模式：每次状态变更写一条新记录，
- * /history 读取时按 taskId 去重保留 updatedAt 最大的一条。
- *
- * 不写入完整 CSV、rows、distributions、events、SVG 或服务器路径。
+ * 两类记录：
+ *   1. analysis_record（轻量快照）：每次状态变更写一条，/history 用
+ *   2. analysis_artifacts（完整制品）：分析完成时写一条，/history/detail 用
  */
 import type { Session } from "./session.js";
+import type { CsvProfile, ChartMeta, Insight } from "./types.js";
+import {
+  extractChartsFromEvents,
+  extractInsightsFromEvents,
+  loadChartSvgs,
+  loadReportHtml,
+} from "./artifacts.js";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -48,6 +54,8 @@ export interface CsvAnalysisHistoryRecord {
 const APP_NAME = "csv-analyze";
 const RECORD_KIND = "analysis_record";
 const RECORD_VERSION = 1;
+const ARTIFACTS_KIND = "analysis_artifacts";
+const ARTIFACTS_VERSION = 1;
 
 // ─── Build record from session + patch ──────────────────────
 
@@ -123,7 +131,7 @@ export async function appendAnalysisHistory(
 
 // ─── Exports for /history endpoint ──────────────────────────
 
-export { APP_NAME, RECORD_KIND, RECORD_VERSION };
+export { APP_NAME, RECORD_KIND, RECORD_VERSION, ARTIFACTS_KIND, ARTIFACTS_VERSION };
 
 // ─── Helpers for analyze lifecycle ──────────────────────────
 
@@ -172,4 +180,79 @@ export function buildErrorPatch(
     error: error instanceof Error ? error.message : String(error),
     durationMs,
   };
+}
+
+// ─── Analysis Artifacts (full result persistence) ───────────
+
+export interface AnalysisArtifacts {
+  kind: "csv_analysis_artifacts";
+  version: 1;
+  taskId: string;
+  csvName: string;
+  profile: CsvProfile;
+  charts: ChartMeta[];
+  insights: Insight[];
+  svgs: Record<string, string>;
+  reportHtml: string;
+  cost: { chart?: number; insight?: number; total: number };
+  durationMs: number;
+  createdAt: number;
+}
+
+/**
+ * 分析完成后，把完整制品（SVG、insights、报告）持久化到 context.store。
+ * 失败不影响主流程。
+ */
+export async function persistAnalysisArtifacts(
+  context: any,
+  session: Session,
+  cost: { chart?: number; insight?: number; total: number },
+  durationMs: number,
+): Promise<void> {
+  try {
+    const conversationId: string = context?.conversation_id ?? "";
+    const store = context?.store ?? null;
+
+    if (!store || !conversationId) return;
+
+    const events = session.events ?? [];
+    const charts = extractChartsFromEvents(events);
+    const insights = extractInsightsFromEvents(events);
+    const svgs = await loadChartSvgs(session.outDir, charts);
+    const reportHtml = await loadReportHtml(session.outDir);
+
+    const artifacts: AnalysisArtifacts = {
+      kind: "csv_analysis_artifacts",
+      version: 1,
+      taskId: session.id,
+      csvName: session.csvName,
+      profile: session.profile,
+      charts,
+      insights,
+      svgs,
+      reportHtml,
+      cost,
+      durationMs,
+      createdAt: session.createdAt,
+    };
+
+    await store.appendMessage({
+      conversationId,
+      role: "assistant",
+      content: artifacts,
+      metadata: {
+        app: APP_NAME,
+        kind: ARTIFACTS_KIND,
+        version: ARTIFACTS_VERSION,
+        taskId: session.id,
+      },
+    });
+
+    console.log(`[persist] artifacts persisted for task=${session.id} (${charts.length} charts, ${Object.keys(svgs).length} svgs, reportHtml=${reportHtml.length} bytes)`);
+  } catch (err) {
+    console.warn(
+      "[history] persistAnalysisArtifacts failed:",
+      err instanceof Error ? err.message : String(err),
+    );
+  }
 }

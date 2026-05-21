@@ -9,11 +9,12 @@
  *   POST /analyze/download        → body:{taskId, kind}
  *   POST /static                  → body:{taskId, path}
  *   POST /history                 → 读取分析历史记录
+ *   POST /history/detail          → 获取完整分析制品
  *
  * 开发模式下通过 vite proxy 把这些路由转发到 localhost:8088。
  */
 import type { AgentEvent } from "./events";
-import type { UploadResponse } from "../types";
+import type { UploadResponse, CsvProfile, ChartMeta, Insight } from "../types";
 
 // ─── History record type ────────────────────────────────────
 
@@ -223,6 +224,51 @@ export async function fetchAnalysisHistory(
     }
   }
   return [];
+}
+
+// ─── History Detail (full artifacts) ───────────────────────
+
+/**
+ * Analysis artifacts type (mirrors backend AnalysisArtifacts from agents/_lib/history.ts).
+ * Shared between backend and frontend for type safety.
+ */
+export interface AnalysisArtifacts {
+  kind: "csv_analysis_artifacts";
+  version: 1;
+  taskId: string;
+  csvName: string;
+  profile: CsvProfile;
+  charts: ChartMeta[];
+  insights: Insight[];
+  svgs: Record<string, string>;
+  reportHtml: string;
+  cost: { chart?: number; insight?: number; total: number };
+  durationMs: number;
+  createdAt: number;
+}
+
+/**
+ * 获取某次分析的完整制品（SVG、insights、报告）。
+ */
+export async function fetchHistoryDetail(
+  taskId: string,
+  conversationId: string,
+): Promise<AnalysisArtifacts | null> {
+  try {
+    const res = await fetch("/history/detail", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...conversationHeaders(conversationId),
+      },
+      body: JSON.stringify({ taskId }),
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) return null;
+    return (await res.json()) as AnalysisArtifacts;
+  } catch {
+    return null;
+  }
 }
 
 // ─── SSE Stream ─────────────────────────────────────────────
