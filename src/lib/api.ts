@@ -1,7 +1,7 @@
 /**
  * Frontend → Backend HTTP / SSE wrapper.
  *
- * EdgeOne Pages Functions routes (all POST):
+ * EdgeOne Makers routes (all POST):
  *   POST /upload                  → multipart CSV upload
  *   POST /analyze                 → body:{taskId, action:"get"|"start"|"cancel"|"delete"}
  *   POST /analyze/stream          → body:{taskId} → SSE stream (fetch streaming)

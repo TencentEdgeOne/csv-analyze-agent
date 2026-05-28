@@ -1,7 +1,7 @@
 /**
  * POST /upload — File upload handler
  *
- * EdgeOne Pages Functions provides context.request.body as a raw Buffer for multipart requests;
+ * EdgeOne Makers provides context.request.body as a raw Buffer for multipart requests;
  * manual parsing is required.
  */
 import path from "node:path";

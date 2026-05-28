@@ -1,7 +1,7 @@
 /**
  * Lightweight multipart/form-data parser.
  *
- * EdgeOne Pages Functions' Node runtime only returns a raw Buffer for multipart body,
+ * EdgeOne Makers' Node runtime only returns a raw Buffer for multipart body,
  * and does not provide request.formData(). Here we manually parse boundaries and extract file fields.
  */
 

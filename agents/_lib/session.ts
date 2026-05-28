@@ -1,6 +1,6 @@
 /**
  * Session management: in-memory + disk.
- * EdgeOne Pages Functions share a single process, so in-memory sessions are valid within the same instance.
+ * EdgeOne Makers share a single process, so in-memory sessions are valid within the same instance.
  */
 import crypto from "node:crypto";
 import path from "node:path";

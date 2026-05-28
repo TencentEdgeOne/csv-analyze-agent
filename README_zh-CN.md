@@ -50,13 +50,13 @@ AI_GATEWAY_API_KEY=your-api-key
 ### 开发
 
 ```bash
-edgeone pages dev
+edgeone makers dev
 ```
 
 ### 构建
 
 ```bash
-edgeone pages build
+edgeone makers build
 ```
 
 ## 架构
@@ -71,7 +71,7 @@ edgeone pages build
 └────────┼──────────────────────┼─────────────────────────────┘
          ↓ POST /upload         ↓ POST /analyze/stream
 ┌─────────────────────────────────────────────────────────────┐
-│  EdgeOne Pages Functions                                    │
+│  EdgeOne Makers                                    │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  analyze()                                             │ │
 │  │  ┌─────────────┐         ┌──────────────┐             │ │
@@ -101,7 +101,7 @@ edgeone pages build
 
 ```
 csv-analyze/
-├── agents/                  # 后端（EdgeOne Pages Functions）
+├── agents/                  # 后端（EdgeOne Makers）
 │   ├── _lib/               # 共享库
 │   │   ├── analyze.ts      # 双 Agent 编排
 │   │   ├── system-prompt.ts # Agent 系统提示词

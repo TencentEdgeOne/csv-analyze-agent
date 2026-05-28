@@ -50,13 +50,13 @@ AI_GATEWAY_API_KEY=your-api-key
 ### Development
 
 ```bash
-edgeone pages dev
+edgeone makers dev
 ```
 
 ### Build
 
 ```bash
-edgeone pages build
+edgeone makers build
 ```
 
 ## Architecture
@@ -71,7 +71,7 @@ edgeone pages build
 └────────┼──────────────────────┼─────────────────────────────┘
          ↓ POST /upload         ↓ POST /analyze/stream
 ┌─────────────────────────────────────────────────────────────┐
-│  EdgeOne Pages Functions                                    │
+│  EdgeOne Makers                                    │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  analyze()                                             │ │
 │  │  ┌─────────────┐         ┌──────────────┐             │ │
@@ -101,7 +101,7 @@ All routes use POST (EdgeOne runtime limitation):
 
 ```
 csv-analyze/
-├── agents/                  # Backend (EdgeOne Pages Functions)
+├── agents/                  # Backend (EdgeOne Makers)
 │   ├── _lib/               # Shared libraries
 │   │   ├── analyze.ts      # Two-agent orchestration
 │   │   ├── system-prompt.ts # Agent system prompts
