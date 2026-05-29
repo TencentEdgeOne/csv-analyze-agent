@@ -29,6 +29,10 @@ export function AgentCanvas({ phase, state, onReset }: AgentCanvasProps) {
   const { upload, charts, insights, done } = state;
   const summary = insights.find((i) => i.kind === "summary");
   const perChart = insights.filter((i) => i.kind === "per_chart");
+  const hasChartWork =
+    charts.length > 0 || state.tools.some((tool) => tool.agent === "chart");
+  const columnScanMode =
+    phase === "scanning" && !hasChartWork ? "scan" : "charting";
 
   return (
     <section className={styles.canvas}>
@@ -77,7 +81,12 @@ export function AgentCanvas({ phase, state, onReset }: AgentCanvasProps) {
             {!done && upload && (
               <ColumnScan
                 distributions={upload.distributions}
+                mode={columnScanMode}
                 scanning={phase === "scanning"}
+                tools={state.tools}
+                runningTool={state.runningTool}
+                chartsGenerated={charts.length}
+                insightsActive={phase === "insights"}
               />
             )}
 
