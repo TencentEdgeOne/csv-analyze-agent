@@ -119,7 +119,7 @@
 .inner {
   position: relative;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   align-items: center;
   gap: 24px;
   padding: 24px 28px;
@@ -191,12 +191,13 @@
     0 0 18px rgba(0, 255, 163, 0.35),
     inset 0 0 12px rgba(0, 255, 163, 0.25);
   transition:
-    transform 700ms var(--ease-hero, cubic-bezier(0.76, 0, 0.24, 1)),
+    transform 360ms var(--ease-hero, cubic-bezier(0.76, 0, 0.24, 1)),
     box-shadow 320ms var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 .btn:hover .arrow {
-  transform: rotate(-360deg);
+  /* Slide left to reinforce the "go back" semantic. */
+  transform: translateX(-4px);
   box-shadow:
     inset 0 0 0 1.5px rgba(0, 255, 163, 0.85),
     0 0 28px rgba(0, 255, 163, 0.7),
@@ -245,33 +246,6 @@
   animation: ping 1.8s ease-in-out infinite;
 }
 
-/* ── Chevron (right) ─────────────────────── */
-.chev {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  font-family: var(--font-mono, "JetBrains Mono", monospace);
-  font-size: 22px;
-  font-weight: 700;
-  color: #032213;
-  background: rgba(3, 34, 19, 0.12);
-  border: 1.5px solid rgba(3, 34, 19, 0.25);
-  transition:
-    transform 360ms var(--ease-hero, cubic-bezier(0.76, 0, 0.24, 1)),
-    background 220ms var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1)),
-    border-color 220ms var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.btn:hover .chev {
-  transform: translateX(8px);
-  background: rgba(3, 34, 19, 0.92);
-  color: var(--accent-emerald, #00ffa3);
-  border-color: #032213;
-}
-
 /* ── Animations ──────────────────────────── */
 @keyframes breathe {
   0%, 100% {
@@ -313,7 +287,6 @@
   }
   .btn,
   .arrow,
-  .chev,
   .inner::before {
     transition: none;
   }
@@ -321,9 +294,6 @@
     transform: none;
   }
   .btn:hover .arrow {
-    transform: none;
-  }
-  .btn:hover .chev {
     transform: none;
   }
 }
@@ -345,10 +315,5 @@
   .hint {
     font-size: 10px;
     letter-spacing: 0.18em;
-  }
-  .chev {
-    width: 38px;
-    height: 38px;
-    font-size: 18px;
   }
 }

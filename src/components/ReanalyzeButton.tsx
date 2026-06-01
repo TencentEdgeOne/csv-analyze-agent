@@ -18,16 +18,13 @@ export function ReanalyzeButton({ onClick }: ReanalyzeButtonProps) {
       <button type="button" className={styles.btn} onClick={onClick}>
         <span className={styles.inner}>
           <span className={styles.arrow} aria-hidden>
-            ↻
+            ←
           </span>
           <span className={styles.labels}>
             <span className={styles.title}>Analyze another CSV</span>
             <span className={styles.hint}>
               start a new session · upload or pick a sample
             </span>
-          </span>
-          <span className={styles.chev} aria-hidden>
-            →
           </span>
         </span>
       </button>
