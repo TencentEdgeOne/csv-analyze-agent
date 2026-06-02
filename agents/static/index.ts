@@ -1,6 +1,12 @@
 /**
  * POST /static — Serve static files from a session's outDir
  *
+ * Lives in `agents/` (not `cloud-functions/`) because the session map and
+ * the on-disk artifacts are owned by this process. Reading via
+ * `getAndTouchSession` also extends the session's TTL on each access so a
+ * tab that's actively viewing a chart doesn't get swept while idle in the
+ * background.
+ *
  * body: { taskId, path: "charts/chart-1.svg" }
  */
 import path from "node:path";

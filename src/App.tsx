@@ -85,9 +85,6 @@ function setReportIdInUrl(taskId: string | null) {
   window.history.replaceState({}, "", url.toString());
 }
 
-// ✅ Module-level dedup flag — outside React lifecycle, StrictMode cannot interfere
-let _historyFetchInFlight = false;
-
 // ─── App ────────────────────────────────────────────────────
 
 export default function App() {
@@ -133,13 +130,6 @@ function AppInner() {
   // ─── History state ──────────────────────────────────────
   const [historyRecords, setHistoryRecords] = useState<HistoryRecordWithRestore[]>([]);
   const [historyLoading, setHistoryLoading] = useState<boolean>(true);
-  /**
-   * Tracks the in-flight initial history fetch. EdgeOne serializes requests
-   * sharing a `makers-conversation-id` — if /history is still pending when
-   * the user uploads, /analyze (which carries the same header) gets a 409.
-   * We abort the fetch on first user action so the lock is released.
-   */
-  const historyAbortRef = useRef<AbortController | null>(null);
 
   const active =
     state.agentStatus.chart === "running" ||
@@ -163,24 +153,10 @@ function AppInner() {
       return;
     }
 
-    if (_historyFetchInFlight) return;
-    _historyFetchInFlight = true;
-
     setHistoryLoading(true);
-    const controller = new AbortController();
-    historyAbortRef.current = controller;
-    fetchAnalysisHistory(conversationIdRef.current, controller.signal)
+    fetchAnalysisHistory(conversationIdRef.current)
       .then(setHistoryRecords)
-      .finally(() => {
-        _historyFetchInFlight = false;
-        setHistoryLoading(false);
-        if (historyAbortRef.current === controller) {
-          historyAbortRef.current = null;
-        }
-      });
-    return () => {
-      controller.abort();
-    };
+      .finally(() => setHistoryLoading(false));
   }, []);
 
   // On startup: if URL has task=xxx, try fetching snapshot from backend to restore
@@ -231,10 +207,6 @@ function AppInner() {
 
   const onFile = useCallback(
     async (f: File) => {
-      // Drop any in-flight history fetch so it can't hold the EdgeOne
-      // per-conversation lock while we kick off /upload + /analyze.
-      historyAbortRef.current?.abort();
-      historyAbortRef.current = null;
       const result: UploadResponse = await uploadCsv(f, conversationIdRef.current);
       setUpload(result);
       connect(result.taskId);

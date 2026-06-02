@@ -2,8 +2,13 @@
  * History persistence: Write analysis summaries + full artifacts via EdgeOne context.store.
  *
  * Two types of records:
- *   1. analysis_record (lightweight snapshot): written on each status change, used by /history
- *   2. analysis_artifacts (full artifacts): written on analysis completion, used by /history/detail
+ *   1. analysis_record (lightweight snapshot): written on each status change, read by /history (cloud-functions)
+ *   2. analysis_artifacts (full artifacts): written on analysis completion, read by /history-detail (cloud-functions)
+ *
+ * The reader side lives in `cloud-functions/history` and `cloud-functions/history-detail`.
+ * Each reader inlines its own copy of `APP_NAME` / `RECORD_KIND` / `ARTIFACTS_KIND` and the
+ * record types — there is no shared module. Keep this file and the two readers aligned by hand
+ * when the metadata or record shape changes.
  */
 import type { Session } from "./session.js";
 import type { CsvProfile, ChartMeta, Insight } from "./types.js";
@@ -202,6 +207,13 @@ export interface AnalysisArtifacts {
 /**
  * After analysis completes, persist full artifacts (SVG, insights, report) to context.store.
  * Failure does not affect the main flow.
+ *
+ * Idempotent on the read side: the reader (`/history-detail`) walks
+ * messages newest-first and stops at the first matching taskId, so
+ * extra writes are harmless. Callers may invoke this any time without
+ * coordinating — `analyze action=get` and `action=delete` both do, to
+ * cover the case where the post-run write was skipped (request context
+ * expired before the background callback could run).
  */
 export async function persistAnalysisArtifacts(
   context: any,

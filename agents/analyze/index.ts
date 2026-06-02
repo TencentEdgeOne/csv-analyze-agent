@@ -3,7 +3,7 @@
  *
  * POST body.action="get"|"start"|"cancel"|"delete"
  */
-import { getSession, destroySession, sanitizeProfile, dispatch } from "../_lib/session.js";
+import { getSession, destroySession, sanitizeProfile, dispatch, type Session } from "../_lib/session.js";
 import { jsonResponse, errorResponse, getAndTouchSession, getRequestBody } from "../_lib/handlers.js";
 import { analyze } from "../_lib/analyze.js";
 import { appendAnalysisHistory, buildDonePatch, buildErrorPatch, persistAnalysisArtifacts } from "../_lib/history.js";
@@ -23,7 +23,7 @@ export async function onRequest(context: any) {
   if (!taskId) return errorResponse("taskId is required");
 
   switch (action) {
-    case "get": return handleGet(taskId);
+    case "get": return handleGet(context, taskId);
     case "start": return handleStart(context, taskId, body);
     case "cancel": return handleCancel(context, taskId);
     case "delete": return handleDelete(context, taskId);
@@ -31,10 +31,30 @@ export async function onRequest(context: any) {
   }
 }
 
-function handleGet(taskId: string): Response {
+/**
+ * Pull cost/duration off the session's "done" event and write the full
+ * artifacts blob to the store. Idempotent on the read side, so safe to
+ * call from any handler that has a fresh request context.
+ */
+function persistDoneArtifacts(context: any, s: Session): Promise<void> {
+  const doneEvt = s.events.find((e) => e.type === "done");
+  const cost = doneEvt?.type === "done" ? doneEvt.cost : { total: 0 };
+  const durationMs = doneEvt?.type === "done" ? doneEvt.durationMs : 0;
+  return persistAnalysisArtifacts(context, s, cost, durationMs);
+}
+
+function handleGet(context: any, taskId: string): Response {
   const sessionOrError = getAndTouchSession(taskId);
   if (sessionOrError instanceof Response) return sessionOrError;
   const s = sessionOrError;
+
+  // Best-effort backfill: if the post-run write was skipped (request
+  // context expired before the .then() callback ran), kick a write off
+  // in the background so the next /history-detail call finds it. Don't
+  // block the GET response — the writer is idempotent on the read side.
+  if (s.status === "done") {
+    void persistDoneArtifacts(context, s).catch(() => {});
+  }
 
   return jsonResponse({
     taskId: s.id,
@@ -84,12 +104,13 @@ async function handleStart(context: any, taskId: string, body: any): Promise<Res
       s.status = "done";
       const elapsed = Date.now() - t0;
       const patch = buildDonePatch(s, elapsed);
-      // Attempt to persist (context may become invalid after the response; best-effort only)
+      // Attempt to persist (context may become invalid after the response; best-effort only).
+      // If it fails here, handleGet/handleDelete will retry on the next request.
       try {
         await appendAnalysisHistory(context, s, patch);
         await persistAnalysisArtifacts(context, s, patch.cost ?? { total: 0 }, elapsed);
       } catch {
-        // If context has expired, handleDelete will backfill on the next request
+        /* swallow — best effort */
       }
     })
     .catch((err) => {
@@ -129,13 +150,11 @@ async function handleDelete(context: any, taskId: string): Promise<Response> {
   // deleted snapshot still shows what was accomplished before deletion.
   const summary = buildDonePatch(s, 0);
 
-  // Before destroying the session, ensure full artifacts are persisted to the store
-  // (here we have a valid request context, unlike the .then() background callback)
+  // Backfill artifacts if the post-run write was skipped. Block here
+  // (unlike handleGet) because the session is about to be destroyed —
+  // we need this write to finish before the on-disk files disappear.
   if (s.status === "done") {
-    const doneEvt = s.events.find((e) => e.type === "done");
-    const cost = doneEvt?.type === "done" ? doneEvt.cost : { total: 0 };
-    const durationMs = doneEvt?.type === "done" ? doneEvt.durationMs : 0;
-    await persistAnalysisArtifacts(context, s, cost, durationMs);
+    await persistDoneArtifacts(context, s);
   }
 
   await appendAnalysisHistory(context, s, { ...summary, status: "deleted" });

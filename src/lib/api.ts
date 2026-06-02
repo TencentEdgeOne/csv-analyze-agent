@@ -2,14 +2,14 @@
  * Frontend → Backend HTTP / SSE wrapper.
  *
  * EdgeOne Makers routes (all POST):
- *   POST /upload                  → multipart CSV upload
- *   POST /analyze                 → body:{taskId, action:"get"|"start"|"cancel"|"delete"}
- *   POST /analyze/stream          → body:{taskId} → SSE stream (fetch streaming)
- *   POST /analyze/rerun-insights  → body:{taskId}
- *   POST /analyze/download        → body:{taskId, kind}
- *   POST /static                  → body:{taskId, path}
- *   POST /history                 → fetch analysis history
- *   POST /history/detail          → get full analysis artifacts
+ *   POST /upload                  → multipart CSV upload                (agents/)
+ *   POST /analyze                 → body:{taskId, action:"get"|"start"|"cancel"|"delete"} (agents/)
+ *   POST /analyze/stream          → body:{taskId} → SSE stream          (agents/)
+ *   POST /analyze/rerun-insights  → body:{taskId}                       (agents/)
+ *   POST /analyze/download        → body:{taskId, kind}                 (agents/)
+ *   POST /static                  → body:{taskId, path}                 (agents/)
+ *   POST /history                 → analysis history list               (cloud-functions/)
+ *   POST /history-detail          → full analysis artifacts             (cloud-functions/)
  *
  * In dev mode, vite proxy forwards these routes to localhost:8088.
  */
@@ -45,9 +45,28 @@ export interface CsvAnalysisHistoryRecord {
   error?: string;
 }
 
-/** Returned from /history endpoint — includes server-computed session liveness. */
+/** Returned from /history endpoint — `restorable` is computed locally (see isRestorable). */
 export interface HistoryRecordWithRestore extends CsvAnalysisHistoryRecord {
   restorable: boolean;
+}
+
+/**
+ * Whether a history record can be re-opened from the backend.
+ *
+ * `done` and `deleted` records are always restorable: their full
+ * artifacts (SVG / insights / report) live in the conversation store
+ * and are served by /history-detail.
+ *
+ * `uploaded` / `running` records depended on the in-memory Session map
+ * inside the agents process. After /history moved to cloud-functions,
+ * that map is no longer reachable from this route, so we treat those
+ * states as non-restorable in the UI. The user can still reach a live
+ * `running` session via /analyze action=get if they have the taskId.
+ *
+ * `error` / `cancelled` snapshots have no artifacts to restore.
+ */
+export function isRestorable(r: CsvAnalysisHistoryRecord): boolean {
+  return r.status === "done" || r.status === "deleted";
 }
 
 // ─── Conversation header helper ─────────────────────────────
@@ -253,34 +272,41 @@ export async function fetchSession(
 /**
  * Fetch the current conversation's analysis history.
  *
- * Pass `signal` to make the request cancellable — useful at app boot, where
- * the user may upload a file before the (slow) initial history fetch
- * completes. Aborting frees the conversation lock for the upload-then-start
- * flow.
+ * Goes to cloud-functions, which is NOT subject to EdgeOne's
+ * per-conversation lock (that lock is keyed by `makers-conversation-id`
+ * and only applies to agent routes). So no 409-retry, no AbortController
+ * dance — a plain fetch is enough.
  */
 export async function fetchAnalysisHistory(
   conversationId: string,
-  signal?: AbortSignal,
 ): Promise<HistoryRecordWithRestore[]> {
+  const t0 = performance.now();
   try {
-    const res = await fetchWithConflictRetry("/history", {
+    const res = await fetch("/history", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...conversationHeaders(conversationId),
-      },
-      body: JSON.stringify({}),
-      signal,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conversation_id: conversationId }),
     });
-
-    if (!res.ok) return [];
-
+    if (!res.ok) {
+      if (import.meta.env.DEV) {
+        console.warn(`[history] ${res.status} (${(performance.now() - t0).toFixed(0)}ms)`);
+      }
+      return [];
+    }
     const data = (await res.json().catch(() => null)) as {
-      records?: HistoryRecordWithRestore[];
+      conversation_id?: string;
+      records?: CsvAnalysisHistoryRecord[];
     } | null;
-    return Array.isArray(data?.records) ? data.records : [];
-  } catch {
-    // AbortError lands here too — caller treats both as "no records".
+    const records = Array.isArray(data?.records) ? data!.records : [];
+    if (import.meta.env.DEV) {
+      console.log(`[history] ${records.length} records (${(performance.now() - t0).toFixed(0)}ms)`);
+    }
+    // /history lives in cloud-functions and no longer has access to
+    // the agents-side in-memory Session map, so it can't compute
+    // `restorable` server-side. Inject it locally based on status.
+    return records.map((r) => ({ ...r, restorable: isRestorable(r) }));
+  } catch (e) {
+    console.warn("[history] failed:", e);
     return [];
   }
 }
@@ -288,7 +314,7 @@ export async function fetchAnalysisHistory(
 // ─── History Detail (full artifacts) ───────────────────────
 
 /**
- * Analysis artifacts type (mirrors backend AnalysisArtifacts from agents/_lib/history.ts).
+ * Analysis artifacts type (mirrors AnalysisArtifacts in agents/_lib/history.ts).
  * Shared between backend and frontend for type safety.
  */
 export interface AnalysisArtifacts {
@@ -308,24 +334,30 @@ export interface AnalysisArtifacts {
 
 /**
  * Fetch full artifacts for a specific analysis (SVG, insights, report).
+ *
+ * Same as fetchAnalysisHistory: cloud-functions don't auto-parse the
+ * `makers-conversation-id` header, so we put conversation_id in the body.
  */
 export async function fetchHistoryDetail(
   taskId: string,
   conversationId: string,
 ): Promise<AnalysisArtifacts | null> {
+  const t0 = performance.now();
   try {
-    const res = await fetch("/history/detail", {
+    const res = await fetch("/history-detail", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...conversationHeaders(conversationId),
-      },
-      body: JSON.stringify({ taskId }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ taskId, conversation_id: conversationId }),
     });
-    if (res.status === 404) return null;
-    if (!res.ok) return null;
+    if (res.status === 404 || !res.ok) {
+      if (import.meta.env.DEV) {
+        console.warn(`[history-detail] ${res.status} (${(performance.now() - t0).toFixed(0)}ms)`);
+      }
+      return null;
+    }
     return (await res.json()) as AnalysisArtifacts;
-  } catch {
+  } catch (e) {
+    console.warn("[history-detail] failed:", e);
     return null;
   }
 }

@@ -1,6 +1,9 @@
 /**
  * Shared artifact extraction utilities.
- * Used by both persistAnalysisArtifacts (history.ts) and buildArtifactsFromSession (history/detail.ts).
+ * Used by `persistAnalysisArtifacts` in history.ts to build the full
+ * artifacts blob written to context.store. The cloud-functions side
+ * (cloud-functions/history-detail) only reads that blob — it doesn't
+ * need to rebuild from disk.
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
