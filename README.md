@@ -1,138 +1,117 @@
 # CSV Analyze
 
-A full-stack web application based on `@anthropic-ai/claude-agent-sdk` that automatically analyzes uploaded CSV files — generating Vega-Lite charts and written insights.
+**Language:** English | [简体中文](./README_zh-CN.md)
 
-Runs on EdgeOne Makers with a React + Tailwind frontend.
+A two-agent CSV analysis app on EdgeOne Makers — uploads a CSV, generates Vega-Lite charts, and writes data-driven insights, all streamed back over SSE. Built on the Claude Agent SDK.
 
-## Deploy
+**Framework:** Claude Agent SDK · **Category:** File Processing <!-- TODO: confirm --> · **Language:** TypeScript
 
-[![Deploy with EdgeOne Pages](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/makers/new?template=csv-analyze-agent&from=within&fromAgent=1&agentLang=typescript)
+[![Deploy to EdgeOne Makers](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/makers/new?template=csv-analyze-agent&from=within&fromAgent=1&agentLang=typescript)
 
-## Features
+<!-- ![preview](./assets/preview.png)  TODO: confirm -->
 
-- **Drag & drop CSV upload** with automatic encoding detection (UTF-8, GBK, UTF-16)
-- **Two-agent pipeline**:
-  - **Chart Agent** — profiles CSV data and generates 3–6 Vega-Lite charts rendered as SVG
-  - **Insight Agent** — reads chart metadata and writes data-driven insights with specific numbers
-- **Real-time SSE streaming** — watch agents think and work in real time
-- **Markdown + HTML reports** — downloadable analysis reports with embedded SVGs
-- **Analysis history** — persistent history with full artifact retrieval via EdgeOne store
-- **Demo mode** — faster analysis with fewer charts for quick previews
+## Overview
 
-## Tech Stack
+Drop in a CSV, get back a working analysis report — charts, written insights, and a downloadable Markdown/HTML deliverable. The pipeline runs as two Claude agents wired through MCP, with EdgeOne sandbox tools handling CSV stats and chart rendering. Use it as a recipe for any "agent inspects a file and writes a report" workflow.
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, Tailwind CSS v4, Framer Motion, CSS Modules |
-| Backend | EdgeOne Maker |
-| AI | `@anthropic-ai/claude-agent-sdk` |
-| Charts | Vega-Lite |
-| CSV | PapaParse, iconv-lite, simple-statistics |
+- **Two-agent pipeline** — Chart Agent profiles the CSV and renders 3–6 Vega-Lite SVGs; Insight Agent reads chart metadata and writes per-chart and overall insights with concrete numbers.
+- **Drag-and-drop ingestion** — handles encoding sniffing (UTF-8 / GBK / UTF-16) and column profiling before the agents are kicked off.
+- **Live SSE telemetry** — frontend state machine (`scanning → charting → insights → report`) is driven entirely by typed agent events; users see the agents think in real time.
+- **Downloadable reports** — Markdown + HTML reports with embedded SVGs; analysis history is persisted via `context.agent.store` so users can come back to a previous task by ID.
+- **Demo mode** — fewer charts and lower budget caps for quick previews.
 
-## Getting Started
+## Environment Variables
 
-### Prerequisites
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AI_GATEWAY_API_KEY` | Yes | Model gateway API key. Use your Makers Models API Key, or any OpenAI-compatible provider key. |
+| `AI_GATEWAY_BASE_URL` | Yes | Gateway base URL. For Makers Models, use `https://ai-gateway.edgeone.link/v1`. |
+| `AI_GATEWAY_MODEL` | No | Model ID. Defaults to `@makers/hy3-preview` (a free built-in model). |
 
-- Node.js 18+
-- An AI gateway or Anthropic API key
+This template follows the OpenAI-compatible standard — point these at Makers Models or any compatible provider.
 
-### Install
+### How to get `AI_GATEWAY_API_KEY`
+
+1. Open the [Makers Console](https://console.cloud.tencent.com/edgeone/makers).
+2. Sign in and enable Makers.
+3. Go to **Makers → Models → API Key** and create a key.
+4. Copy it into `AI_GATEWAY_API_KEY`.
+
+The built-in `@makers/hy3-preview` model is free with a usage cap and is suitable for prototyping. For production, bind your own paid provider (BYOK).
+
+### Provider fallbacks
+
+`agents/_lib/model.ts` maps `AI_GATEWAY_*` to `ANTHROPIC_*` for the Claude Agent SDK subprocess at runtime. You can also set `AI_GATEWAY_SMALL_MODEL` to override the small model used for internal SDK sub-calls. The optional `WORK_ROOT` env var changes where uploaded CSVs and generated artifacts are written (defaults to `$TMPDIR/csv-analyze-sessions`); `SESSION_TTL_MS` controls in-memory session expiry (default 24h).
+
+## Local Development
+
+Prerequisites: Node.js ≥ 18 and the EdgeOne CLI (`npm i -g edgeone`).
 
 ```bash
 npm install
-```
-
-### Environment Variables
-
-Create a `.env` file:
-
-```env
-AI_GATEWAY_BASE_URL=https://your-gateway-url
-AI_GATEWAY_API_KEY=your-api-key
-```
-
-### Development
-
-```bash
+cp .env.example .env       # then fill in AI_GATEWAY_API_KEY / AI_GATEWAY_BASE_URL
 edgeone makers dev
 ```
 
-### Build
+Local agent metrics & traces are exposed at `http://localhost:8080/agent-metrics`.
 
-```bash
-edgeone makers build
-```
+## Project Structure
 
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Browser (React SPA)                                        │
-│  ┌─────────┐  ┌──────────┐  ┌───────────┐  ┌───────────┐  │
-│  │DropZone │→ │ PassCard │→ │AgentCanvas│→ │ReportView │  │
-│  └─────────┘  └──────────┘  └───────────┘  └───────────┘  │
-│        │              SSE stream ↑                           │
-└────────┼──────────────────────┼─────────────────────────────┘
-         ↓ POST /upload         ↓ POST /analyze/stream
-┌─────────────────────────────────────────────────────────────┐
-│  EdgeOne Makers                                    │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  analyze()                                             │ │
-│  │  ┌─────────────┐         ┌──────────────┐             │ │
-│  │  │ Chart Agent │ ──MCP──→│ Insight Agent│             │ │
-│  │  │ (3-6 charts)│         │ (insights)   │             │ │
-│  │  └─────────────┘         └──────────────┘             │ │
-│  └────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### API Routes
-
-All routes use POST (EdgeOne runtime limitation). The "Side" column shows whether the route is served by `agents/` (stateful — owns the in-memory Session map and SSE streams) or `cloud-functions/` (stateless — only reads `context.agent.store`):
-
-| Route | Side | Purpose |
-|-------|------|---------|
-| `/upload` | `agents/` | Multipart CSV upload; returns taskId + profile |
-| `/analyze` | `agents/` | `action: "get"\|"start"\|"cancel"\|"delete"` |
-| `/analyze/stream` | `agents/` | SSE stream (body: `{taskId}`) |
-| `/analyze/rerun-insights` | `agents/` | Re-run insight agent on existing charts |
-| `/analyze/download` | `agents/` | Download report files |
-| `/analyze/stop` | `agents/` | Platform-native abort via `context.utils.abortActiveRun()` |
-| `/static` | `agents/` | Serve generated SVG/chart files (touches the live session to keep it alive while a tab views it) |
-| `/history` | `cloud-functions/` | Per-conversation analysis history |
-| `/history-detail` | `cloud-functions/` | Full analysis artifacts (SVG, insights, report HTML) for a given taskId |
-
-### Project Structure
-
-```
+```text
 csv-analyze/
-├── agents/                  # Stateful EdgeOne Makers Agent Functions (own the Session map + SSE streams)
-│   ├── _lib/               # Shared libraries
-│   │   ├── analyze.ts      # Two-agent orchestration
-│   │   ├── system-prompt.ts # Agent system prompts
-│   │   ├── report.ts       # Markdown/HTML report assembly
-│   │   ├── session.ts      # In-memory session management
-│   │   ├── events.ts       # Typed event protocol
-│   │   ├── tools/
-│   │   │   ├── chart-agent/   # MCP tools for Chart Agent
-│   │   │   ├── insight-agent/ # MCP tools for Insight Agent
-│   │   │   └── shared/       # Shared utilities (CSV stats, cache)
-│   │   └── ...
-│   ├── analyze/            # /analyze, /analyze/stream, /analyze/rerun-insights, /analyze/download, /analyze/stop
-│   ├── upload/             # /upload route
-│   └── static/             # /static route — serves SVG/chart files from the live session
-├── cloud-functions/         # Stateless EdgeOne Pages Node Functions (read-only on context.agent.store)
-│   ├── history/            # /history — per-conversation analysis records
-│   ├── history-detail/     # /history-detail — full artifacts blob for one taskId
-│   ├── _http.ts            # Shared HTTP helpers
-│   └── _logger.ts          # Logger utility
-├── src/                    # Frontend (React SPA)
-│   ├── components/         # UI components with CSS Modules
-│   ├── hooks/              # useAgentStream (SSE state machine)
-│   ├── lib/                # API client, event types, formatters
-│   └── types.ts            # Frontend type definitions
-├── index.html
-└── package.json
+├── agents/                          # Stateful EdgeOne Makers Agent Functions (Node/TS)
+│   ├── _lib/                       # Shared modules — agents, tools, sessions, events, reports
+│   │   ├── analyze.ts              # Two-agent orchestration
+│   │   ├── system-prompt.ts        # Chart / Insight system prompts
+│   │   ├── report.ts               # Markdown/HTML report assembly
+│   │   ├── session.ts              # In-memory Map<conversationId, Session>
+│   │   ├── events.ts               # Typed AgentEvent union
+│   │   └── tools/                  # MCP tools (chart-agent, insight-agent, shared)
+│   ├── upload/index.ts             # POST /upload — multipart CSV ingestion + profile
+│   ├── analyze/index.ts            # POST /analyze — get | start | cancel | delete
+│   ├── analyze/stream.ts           # POST /analyze/stream — SSE event stream
+│   ├── analyze/rerun-insights.ts   # POST /analyze/rerun-insights
+│   ├── analyze/download.ts         # POST /analyze/download — report download
+│   ├── analyze/stop.ts             # POST /analyze/stop — abort active run
+│   └── static/index.ts             # POST /static — serve generated SVGs
+├── cloud-functions/                 # Stateless EdgeOne Pages Node Functions
+│   ├── history/index.ts            # POST /history — per-conversation analysis records
+│   ├── history-detail/index.ts     # POST /history-detail — full artifacts blob for one taskId
+│   ├── _http.ts                    # Shared HTTP helpers
+│   └── _logger.ts                  # Logger utility
+├── src/                             # Frontend (React + Vite + Tailwind v4)
+│   ├── components/                 # DropZone, PassCard, AgentCanvas, ReportView, ...
+│   ├── hooks/useAgentStream.ts     # SSE state machine reducer
+│   ├── lib/                        # API client, event types, formatters
+│   └── types.ts                    # Frontend type subset
+├── package.json
+├── edgeone.json                     # framework=claude-sdk, agents.timeout=300, sandbox.timeout=300
+└── index.html
 ```
 
-> **Why two backend folders?** `agents/` and `cloud-functions/` run in separate process contexts on EdgeOne. The agents process owns the `Map<string, Session>` and the per-conversation lifecycle (running tasks, abort signals, SSE streams); the cloud-functions process is stateless and reaches the persisted store via `context.agent.store`. Routes that don't need a live Session live in `cloud-functions/` so they don't compete with active analyses for the per-conversation lock.
+> Files prefixed with `_` are private modules — not exposed as public routes.
+
+## How It Works
+
+`agents/` runs in **conversation mode**: requests carrying the same `Markers-Conversation-Id` HTTP header are sticky-routed to the same agent instance, which means they share the same in-memory `Session` and the same EdgeOne sandbox. That stickiness is what lets `/analyze/stream` (the SSE stream) and `/analyze/stop` (the abort) reach the same running task.
+
+End-to-end:
+
+1. **Upload** — `POST /upload` ingests a multipart CSV, sniffs encoding, computes a column profile, returns a `taskId`. The CSV is stashed under `WORK_ROOT/<taskId>/`.
+2. **Start** — `POST /analyze` with `action: "start"` registers a `Session` in the in-memory map and kicks off `analyze()` in `agents/_lib/analyze.ts`. The browser opens `POST /analyze/stream` to subscribe to the typed `AgentEvent` stream.
+3. **Chart Agent** — Claude (via `@anthropic-ai/claude-agent-sdk`'s `query()` + `createSdkMcpServer()`) calls a custom MCP tool set: `profile_csv`, `sample_rows`, `get_column_values`, `compute_correlation`, `render_chart`, `save_chart_meta`. It plans 3–6 charts, renders Vega-Lite specs to SVG, and saves chart metadata into the session.
+4. **Insight Agent** — a second Claude agent reads the cached profile + chart metadata via `read_profile`, `read_chart_meta`, `read_column_stats`, `read_correlation`, then writes per-chart insights and an overall summary via `save_insight`.
+5. **Report assembly** — `agents/_lib/report.ts` weaves chart SVGs + insights into Markdown and HTML; `POST /analyze/download` returns the deliverable.
+6. **Validation & cancel** — at any point the frontend can call `POST /analyze/stop`, which goes through `context.utils.abortActiveRun()` and tears down the live LLM call. Persisted results live in `context.agent.store` and can be re-fetched via the stateless `/history` and `/history-detail` cloud functions without spinning up a new agent run.
+
+Sandbox credentials are injected by the runtime — no local sandbox config is needed. Per `edgeone.json`, both the agent and its sandbox have a 300-second timeout (`agents.timeout`, `agents.sandbox.timeout`).
+
+## Resources
+
+- [EdgeOne Makers Agents — Documentation](https://pages.edgeone.ai/document/agents)
+- [EdgeOne Makers — Quick Start](https://pages.edgeone.ai/document/agents-quickstart)
+- [Makers Models](https://pages.edgeone.ai/document/models)
+
+## License
+
+MIT.
