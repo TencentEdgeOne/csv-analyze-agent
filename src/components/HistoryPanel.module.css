@@ -1,0 +1,313 @@
+/* HistoryPanel —— Card grid matching SamplePicker's visual language */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 2px;
+}
+
+.label {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: var(--text-muted, #656569);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(136, 136, 255, 0.14),
+    transparent 80%
+  );
+}
+
+.clearLink {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted, #656569);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 180ms, color 180ms;
+  white-space: nowrap;
+}
+
+.wrap:hover .clearLink {
+  opacity: 1;
+}
+
+.clearLink:hover {
+  color: var(--accent-coral, #ff6b6b);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.loading {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--text-muted, #656569);
+  text-transform: uppercase;
+  padding: 12px 0;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Card ─────────────────────────────────────────────── */
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  min-height: 88px;
+  text-align: left;
+  background: var(--bg-raised-1, #0e0e11);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  overflow: hidden;
+  /* no border transition on .card itself — the ::before pseudo handles it */
+  transition:
+    transform 260ms cubic-bezier(0.4, 0, 0.2, 1),
+    background 260ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/*
+ * Animated emerald border — draws from the left edge clockwise on hover.
+ * Uses a conic-gradient mask that expands via @keyframes.
+ */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;               /* overlap the 1px border */
+  border-radius: inherit;
+  border: 1.5px solid var(--accent-emerald, #00ffa3);
+  pointer-events: none;
+  opacity: 0;
+  /* clip to nothing by default */
+  clip-path: inset(0 100% 100% 0);
+  transition:
+    opacity 180ms cubic-bezier(0.4, 0, 0.2, 1),
+    clip-path 380ms cubic-bezier(0.22, 0.68, 0.32, 1);
+}
+
+.card:hover {
+  background: rgba(0, 255, 163, 0.025);
+  transform: translateY(-2px);
+}
+
+.card:hover::before {
+  opacity: 1;
+  clip-path: inset(0 0 0 0);       /* reveal the full border */
+}
+
+.card:active {
+  transform: translateY(0);
+}
+
+/* Status-specific left accent — a 2px bar via border-left */
+.card[data-status="done"] {
+  border-left: 2px solid var(--accent-emerald, #00ffa3);
+}
+.card[data-status="running"] {
+  border-left: 2px solid var(--accent-cyan, #7de3f0);
+}
+.card[data-status="uploaded"] {
+  border-left: 2px solid rgba(136, 136, 255, 0.5);
+}
+.card[data-status="error"] {
+  border-left: 2px solid var(--accent-coral, #ff6b6b);
+}
+.card[data-status="cancelled"] {
+  border-left: 2px solid var(--accent-amber, #ffb547);
+}
+.card[data-status="deleted"] {
+  border-left: 2px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Expired / non-restorable cards */
+.card.expired {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.card.expired:hover {
+  background: var(--bg-raised-1, #0e0e11);
+  transform: none;
+}
+
+.card.expired:hover::before {
+  opacity: 0;
+}
+
+/* ─── Text brightening on hover ───────────────────────── */
+
+.card .csvName {
+  transition: color 220ms;
+}
+
+.card .timeMeta,
+.card .stats,
+.card .stats span {
+  transition: color 220ms;
+}
+
+.card:hover .csvName {
+  color: #ffffff;
+}
+
+.card:hover .timeMeta {
+  color: var(--text-secondary, #a3a3ad);
+}
+
+.card:hover .stats,
+.card:hover .stats span {
+  color: var(--text-primary, #f5f5f7);
+}
+
+.card:hover .sep {
+  color: rgba(0, 255, 163, 0.25);
+}
+
+.card.expired:hover .csvName,
+.card.expired:hover .timeMeta,
+.card.expired:hover .stats,
+.card.expired:hover .stats span {
+  color: inherit;
+}
+
+/* ─── Card internals ──────────────────────────────────── */
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusDot[data-status="done"] {
+  background: var(--accent-emerald, #00ffa3);
+  box-shadow: 0 0 6px rgba(0, 255, 163, 0.4);
+}
+.statusDot[data-status="running"] {
+  background: var(--accent-cyan, #7de3f0);
+  box-shadow: 0 0 6px rgba(125, 227, 240, 0.4);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+.statusDot[data-status="uploaded"] {
+  background: rgba(136, 136, 255, 0.7);
+}
+.statusDot[data-status="error"] {
+  background: var(--accent-coral, #ff6b6b);
+  box-shadow: 0 0 6px rgba(255, 107, 107, 0.3);
+}
+.statusDot[data-status="cancelled"] {
+  background: var(--accent-amber, #ffb547);
+}
+.statusDot[data-status="deleted"] {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.timeMeta {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted, #656569);
+  font-variant-numeric: tabular-nums;
+}
+
+.csvName {
+  font-family: var(--font-display, "Clash Display", sans-serif);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary, #f5f5f7);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 10px;
+  color: var(--text-secondary, #a3a3ad);
+  line-height: 1.4;
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+.stats span {
+  white-space: nowrap;
+}
+
+.sep {
+  color: rgba(255, 255, 255, 0.1);
+  transition: color 220ms;
+}
+
+.errorHint {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 9px;
+  color: var(--accent-coral, #ff6b6b);
+  opacity: 0.75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card::before {
+    transition: none;
+  }
+  .card:hover {
+    transform: none;
+  }
+  .card::before {
+    clip-path: none;
+  }
+  .statusDot[data-status="running"] {
+    animation: none;
+  }
+}

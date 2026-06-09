@@ -1,0 +1,241 @@
+.wrap {
+  padding: 40px 8px 32px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.stats {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  color: var(--text-secondary);
+  margin-bottom: 28px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.htmlRow {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px 20px 22px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised-1);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  text-decoration: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition:
+    transform 260ms var(--ease-smooth),
+    border-color 260ms var(--ease-smooth),
+    box-shadow 260ms var(--ease-smooth);
+  overflow: hidden;
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 12px;
+  height: 1px;
+  background: var(--accent-emerald);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 360ms var(--ease-smooth);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 255, 163, 0.2);
+  box-shadow: 0 16px 40px -20px rgba(0, 255, 163, 0.24);
+}
+
+.card:hover::after {
+  transform: scaleX(1);
+}
+
+.htmlCard {
+  max-width: 320px;
+}
+
+.icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+.file {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.action {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-emerald);
+  margin-top: 4px;
+}
+
+/* ─────────────────────────────────────── */
+/* Compact mode: used in the left sidebar  */
+/* ─────────────────────────────────────── */
+
+.compact {
+  padding: 0;
+  margin: 0;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-raised-1, #0e0e11);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+}
+
+.cHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.cHeaderTitle {
+  flex: 1;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: var(--text-secondary, #a3a3ad);
+  text-transform: uppercase;
+}
+
+.cHeaderCount {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(0, 255, 163, 0.08);
+  color: var(--accent-emerald, #00ffa3);
+  font-variant-numeric: tabular-nums;
+}
+
+.cStats {
+  padding: 10px 14px 0;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  color: var(--text-muted, #656569);
+  text-align: left;
+  margin: 0;
+}
+
+.cList {
+  list-style: none;
+  margin: 0;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cCard {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  text-decoration: none;
+  color: var(--text-primary, #f5f5f7);
+  cursor: pointer;
+  transition:
+    background 180ms var(--ease-smooth),
+    border-color 180ms var(--ease-smooth),
+    transform 180ms var(--ease-smooth);
+}
+
+.cCard:hover {
+  background: rgba(0, 255, 163, 0.04);
+  border-color: rgba(0, 255, 163, 0.28);
+  transform: translateX(2px);
+}
+
+.cCard:focus-visible {
+  outline: 2px solid var(--accent-emerald);
+  outline-offset: 2px;
+}
+
+.cIcon {
+  font-size: 14px;
+  line-height: 1;
+  text-align: center;
+}
+
+.cLabels {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.cTitle {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--text-primary, #f5f5f7);
+}
+
+.cFile {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 10px;
+  color: var(--text-muted, #656569);
+}
+
+.cAction {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 14px;
+  color: var(--accent-emerald, #00ffa3);
+  opacity: 0.6;
+  transition: transform 180ms var(--ease-smooth), opacity 180ms;
+}
+
+.cCard:hover .cAction {
+  transform: translateY(2px);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cCard,
+  .cAction {
+    transition: none;
+  }
+  .cCard:hover {
+    transform: none;
+  }
+}

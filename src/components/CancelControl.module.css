@@ -1,0 +1,279 @@
+/* ─────────────────────────────────────────
+ * CancelControl —— three-state CTA
+ * Shared button skeleton; coral/amber/emerald colorways per phase.
+ * ───────────────────────────────────────── */
+
+.btn {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 18px;
+  background: var(--bg-raised-1, #0e0e11);
+  border: 1px solid var(--state-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 8px);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  cursor: pointer;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    transform 180ms var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1)),
+    border-color 220ms var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1)),
+    background 220ms var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1)),
+    box-shadow 260ms var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.btn:disabled {
+  cursor: wait;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--state-color, var(--accent-emerald, #00ffa3));
+  outline-offset: 3px;
+}
+
+/* sweeping shimmer on hover (running + back states only) */
+.btn:not(:disabled)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    var(--state-shimmer, rgba(255, 255, 255, 0.06)) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  transition: transform 700ms var(--ease-hero, cubic-bezier(0.76, 0, 0.24, 1));
+  pointer-events: none;
+  z-index: -1;
+}
+
+.btn:not(:disabled):hover::before {
+  transform: translateX(100%);
+}
+
+/* ── Icon column ────────────────────────── */
+.icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--state-icon-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--state-icon-border, rgba(255, 255, 255, 0.08));
+  color: var(--state-color, var(--text-primary, #f5f5f7));
+  transition:
+    background 220ms var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1)),
+    border-color 220ms var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1)),
+    transform 220ms var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* ── Label / hint typography ────────────── */
+.label {
+  text-align: left;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--state-color, var(--text-primary, #f5f5f7));
+  font-feature-settings: "ss01", "tnum";
+}
+
+.hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--state-hint-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--state-hint-border, rgba(255, 255, 255, 0.08));
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--state-hint-color, var(--text-muted, #656569));
+}
+
+/* ────────────────────────────────────────── */
+/* STATE 1: running → coral "STOP ANALYSIS"   */
+/* ────────────────────────────────────────── */
+
+.btn.stop {
+  --state-color: #ff8a8a;
+  --state-border: rgba(255, 107, 107, 0.32);
+  --state-icon-bg: rgba(255, 107, 107, 0.1);
+  --state-icon-border: rgba(255, 107, 107, 0.42);
+  --state-hint-bg: rgba(255, 107, 107, 0.06);
+  --state-hint-border: rgba(255, 107, 107, 0.18);
+  --state-hint-color: rgba(255, 138, 138, 0.85);
+  --state-shimmer: rgba(255, 107, 107, 0.16);
+  box-shadow:
+    0 0 0 1px rgba(255, 107, 107, 0.06),
+    inset 0 0 16px rgba(255, 107, 107, 0.03);
+}
+
+.btn.stop:hover {
+  background: rgba(255, 107, 107, 0.06);
+  border-color: rgba(255, 107, 107, 0.6);
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 24px -8px rgba(255, 107, 107, 0.45),
+    inset 0 0 24px rgba(255, 107, 107, 0.06);
+}
+
+.btn.stop:hover .icon {
+  background: rgba(255, 107, 107, 0.18);
+  border-color: rgba(255, 107, 107, 0.7);
+  transform: scale(1.06);
+}
+
+.btn.stop:active {
+  transform: translateY(0);
+}
+
+/* The pulsing red square inside the icon */
+.stopGlyph {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: #ff6b6b;
+  box-shadow: 0 0 12px rgba(255, 107, 107, 0.65);
+  animation: stop-pulse 1.6s var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1)) infinite;
+}
+
+@keyframes stop-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.82);
+  }
+}
+
+/* ────────────────────────────────────────── */
+/* STATE 2: cancelling → amber waiting        */
+/* ────────────────────────────────────────── */
+
+.btn.waiting {
+  --state-color: #ffd28a;
+  --state-border: rgba(255, 181, 71, 0.32);
+  --state-icon-bg: rgba(255, 181, 71, 0.08);
+  --state-icon-border: rgba(255, 181, 71, 0.4);
+  --state-hint-bg: transparent;
+  --state-hint-border: transparent;
+  --state-hint-color: rgba(255, 210, 138, 0.6);
+  background: rgba(255, 181, 71, 0.04);
+  cursor: wait;
+}
+
+/* Conic-gradient spinner for the icon */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background:
+    conic-gradient(from 0deg, transparent 0deg, #ffb547 280deg, transparent 360deg);
+  -webkit-mask: radial-gradient(circle at center, transparent 4.5px, #000 5px);
+          mask: radial-gradient(circle at center, transparent 4.5px, #000 5px);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Three trailing dots, like "..." */
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-amber, #ffb547);
+  opacity: 0.4;
+  animation: dot-bounce 1.2s var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1)) infinite;
+}
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dot-bounce {
+  0%, 60%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+/* ────────────────────────────────────────── */
+/* STATE 3: cancelled → emerald "BACK HOME"   */
+/* ────────────────────────────────────────── */
+
+.btn.back {
+  --state-color: var(--accent-emerald, #00ffa3);
+  --state-border: rgba(0, 255, 163, 0.32);
+  --state-icon-bg: rgba(0, 255, 163, 0.08);
+  --state-icon-border: rgba(0, 255, 163, 0.4);
+  --state-hint-bg: rgba(0, 255, 163, 0.06);
+  --state-hint-border: rgba(0, 255, 163, 0.18);
+  --state-hint-color: rgba(0, 255, 163, 0.7);
+  --state-shimmer: rgba(0, 255, 163, 0.18);
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 163, 0.06),
+    inset 0 0 16px rgba(0, 255, 163, 0.04);
+}
+
+.btn.back:hover {
+  background: rgba(0, 255, 163, 0.05);
+  border-color: rgba(0, 255, 163, 0.6);
+  transform: translateY(-1px);
+  box-shadow:
+    0 10px 28px -8px rgba(0, 255, 163, 0.4),
+    inset 0 0 24px rgba(0, 255, 163, 0.06);
+}
+
+.btn.back:hover .icon {
+  background: rgba(0, 255, 163, 0.16);
+  border-color: rgba(0, 255, 163, 0.7);
+}
+
+.btn.back:hover .backGlyph {
+  transform: translateX(-3px);
+}
+
+.backGlyph {
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 600;
+  transition: transform 220ms var(--ease-hero, cubic-bezier(0.76, 0, 0.24, 1));
+}
+
+/* ────────────────────────────────────────── */
+/* Reduced motion                              */
+/* ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .stopGlyph,
+  .spinner,
+  .dot {
+    animation: none;
+  }
+  .btn,
+  .icon,
+  .backGlyph,
+  .btn::before {
+    transition: none;
+  }
+  .btn:hover {
+    transform: none;
+  }
+}

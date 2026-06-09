@@ -1,0 +1,7 @@
+{
+  "name": "canvas",
+  "version": "0.0.0-edgeone-stub",
+  "main": "index.js",
+  "type": "commonjs",
+  "private": true
+}

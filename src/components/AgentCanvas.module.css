@@ -1,0 +1,101 @@
+.canvas {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 100%;
+  padding: 72px 56px 120px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.hero {
+  padding-top: 10vh;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(72px, 9vw, 140px);
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  margin: 0 0 32px;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title span {
+  background: linear-gradient(180deg, #ffffff 0%, #8c8c93 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.title span:nth-child(2) {
+  background: linear-gradient(180deg, #7de3f0 0%, #00ffa3 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sub {
+  font-family: var(--font-body);
+  font-size: 22px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  margin: 0 0 56px;
+  letter-spacing: -0.005em;
+}
+
+.poweredBy {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 20px;
+  /* column-reverse causes new items to stack from the top (newest on top) */
+}
+
+.stack > *:first-child {
+  /* SummaryIsland is last in the DOM but appears at the top visually */
+  order: 2;
+}
+
+/* ── Partial-result warning banner ───────────────────────── */
+.partialBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-radius: var(--radius-md, 8px);
+  background: rgba(255, 181, 71, 0.08);
+  border: 1px solid rgba(255, 181, 71, 0.32);
+  color: var(--accent-amber, #ffb547);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+.partialIcon {
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.partialText {
+  flex: 1;
+  color: rgba(255, 215, 165, 0.92);
+}
+
+@media (max-width: 1024px) {
+  .canvas {
+    padding: 48px 20px 120px;
+  }
+}

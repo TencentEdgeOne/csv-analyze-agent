@@ -1,0 +1,114 @@
+.card {
+  position: relative;
+  background: var(--bg-raised-1);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px 20px;
+  box-shadow: inset 0 0 0 1px rgba(0, 255, 163, 0.06);
+  transition:
+    transform 260ms var(--ease-smooth),
+    box-shadow 260ms var(--ease-smooth);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 255, 163, 0.22),
+    0 12px 36px -20px rgba(0, 255, 163, 0.18);
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.download {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 200ms;
+}
+
+.download:hover {
+  opacity: 1;
+  color: var(--accent-emerald);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.desc {
+  margin: 4px 0 14px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.svg {
+  display: block;
+  min-height: 140px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+}
+
+.svg :global(svg) {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  /* Slightly brightens the background so white-background SVGs don't look dirty */
+  background: #fff;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.loading {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.err {
+  color: var(--accent-coral);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-top: 8px;
+}
+
+.foot {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.cols {
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

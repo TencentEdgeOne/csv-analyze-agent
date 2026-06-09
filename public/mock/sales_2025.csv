@@ -1,0 +1,49 @@
+date,region,channel,product_category,quantity,amount,customer_age,payment_method
+2025-04-01,East China,Online,Electronics,2,598,28,WeChat Pay
+2025-04-01,East China,Online,Home,1,899,45,Alipay
+2025-04-01,South China,Offline,Apparel,1,459,32,Credit Card
+2025-04-01,North China,Online,Food,3,477,38,WeChat Pay
+2025-04-01,East China,Online,Electronics,1,1599,29,Alipay
+2025-04-01,Southwest China,Online,Beauty,2,378,26,WeChat Pay
+2025-04-01,East China,Offline,Home,1,299,52,Cash
+2025-04-02,Central China,Online,Electronics,1,129,24,WeChat Pay
+2025-04-02,East China,Online,Apparel,3,297,31,Alipay
+2025-04-02,South China,Online,Beauty,1,329,27,WeChat Pay
+2025-04-02,East China,Offline,Electronics,1,599,35,Credit Card
+2025-04-02,Northwest China,Online,Food,1,469,48,Alipay
+2025-04-03,East China,Online,Home,2,178,30,WeChat Pay
+2025-04-03,South China,Online,Electronics,1,3299,33,Credit Card
+2025-04-03,North China,Online,Apparel,2,598,25,WeChat Pay
+2025-04-03,East China,Online,Beauty,1,899,36,Alipay
+2025-04-03,Southwest China,Offline,Food,4,316,42,WeChat Pay
+2025-04-04,East China,Online,Electronics,1,6999,34,Credit Card
+2025-04-04,South China,Online,Home,1,459,50,Alipay
+2025-04-04,Central China,Online,Apparel,1,399,28,WeChat Pay
+2025-04-04,East China,Offline,Electronics,1,359,27,Cash
+2025-04-04,Northeast China,Online,Beauty,3,357,31,WeChat Pay
+2025-04-05,East China,Online,Food,2,398,29,Alipay
+2025-04-05,South China,Online,Electronics,2,398,26,WeChat Pay
+2025-04-05,North China,Online,Home,5,295,40,WeChat Pay
+2025-04-05,East China,Online,Apparel,1,599,32,Alipay
+2025-04-05,Southwest China,Online,Electronics,1,1599,30,Credit Card
+2025-04-06,East China,Online,Beauty,1,1299,38,Alipay
+2025-04-06,South China,Offline,Apparel,1,1299,44,Credit Card
+2025-04-06,East China,Online,Home,1,2999,47,Alipay
+2025-04-07,North China,Online,Electronics,1,1899,35,Credit Card
+2025-04-07,East China,Online,Food,2,498,28,WeChat Pay
+2025-04-07,South China,Online,Beauty,1,459,24,WeChat Pay
+2025-04-07,East China,Online,Apparel,1,1599,41,Credit Card
+2025-04-07,Central China,Online,Home,1,269,33,Alipay
+2025-04-08,East China,Online,Electronics,1,599,29,WeChat Pay
+2025-04-08,South China,Online,Apparel,1,499,30,Alipay
+2025-04-08,North China,Offline,Home,1,1899,55,Cash
+2025-04-08,East China,Online,Beauty,2,598,34,WeChat Pay
+2025-04-08,Southwest China,Online,Electronics,1,399,22,WeChat Pay
+2025-04-09,East China,Online,Food,1,389,46,Alipay
+2025-04-09,South China,Online,Apparel,2,998,28,Credit Card
+2025-04-09,East China,Online,Electronics,1,5999,32,Credit Card
+2025-04-09,Central China,Offline,Home,1,4999,48,Credit Card
+2025-04-09,Northeast China,Online,Beauty,1,299,26,WeChat Pay
+2025-04-10,East China,Online,Apparel,1,1899,37,Alipay
+2025-04-10,South China,Online,Electronics,1,499,31,WeChat Pay
+2025-04-10,East China,Online,Food,3,597,39,WeChat Pay

@@ -1,0 +1,77 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 180ms var(--ease-smooth),
+    border-color 180ms var(--ease-smooth);
+}
+
+.chip:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.glyph {
+  font-size: 9px;
+  line-height: 1;
+}
+
+.name {
+  color: inherit;
+}
+
+.dur {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+/* running: emerald pulse */
+.running {
+  color: var(--accent-emerald);
+  border-color: rgba(0, 255, 163, 0.22);
+  animation: chip-pulse 0.8s ease-in-out infinite;
+}
+
+/* done: solid emerald border */
+.done {
+  color: var(--accent-emerald);
+  border-color: rgba(0, 255, 163, 0.14);
+}
+
+/* failed: coral */
+.failed {
+  color: var(--accent-coral);
+  border-color: rgba(255, 107, 107, 0.22);
+}
+
+/* insight agent switches to amber */
+.chip.insight.running {
+  color: var(--accent-amber);
+  border-color: rgba(255, 181, 71, 0.26);
+}
+.chip.insight.done {
+  color: var(--accent-amber);
+  border-color: rgba(255, 181, 71, 0.16);
+}
+
+@keyframes chip-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}

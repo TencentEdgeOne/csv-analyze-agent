@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+
+# Build outputs
+dist/
+build/
+
+# EdgeOne generated/runtime files
+.edgeone/
+.edgeone.zip
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+agents/.env
+agents/**/.env
+
+# Runtime/session outputs
+csv-analyze-sessions/
+report/
+reports/
+.sessions.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code generated files
+.claude/
+.idea/
+.codegraph/
+*.swp
+*.swo
+
+# TypeScript / Vite
+*.tsbuildinfo
+*.local
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Internal planning docs
+plan/
+
+# AI assistant local instructions
+CLAUDE.md
+AGENTS.md

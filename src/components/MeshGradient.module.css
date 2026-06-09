@@ -1,0 +1,41 @@
+.mesh {
+  position: fixed;
+  inset: -10% -10% -10% 30%;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(
+      ellipse at 80% 15%,
+      rgba(0, 255, 163, 0.18) 0%,
+      transparent 45%
+    ),
+    radial-gradient(
+      ellipse at 95% 60%,
+      rgba(139, 92, 246, 0.22) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 70% 90%,
+      rgba(236, 72, 153, 0.14) 0%,
+      transparent 45%
+    );
+  filter: blur(40px);
+  opacity: 0.75;
+  animation: drift 30s ease-in-out infinite;
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-2%, 3%, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh {
+    animation: none;
+  }
+}

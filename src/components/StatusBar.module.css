@@ -1,0 +1,150 @@
+.bar {
+  position: fixed;
+  left: 32px;
+  right: 32px;
+  bottom: 24px;
+  min-height: 52px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: rgba(14, 14, 17, 0.72);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+  z-index: 40;
+  opacity: 0.92;
+  transition: opacity 300ms;
+}
+
+.bar:hover {
+  opacity: 1;
+}
+
+.agents {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+
+.badgeDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: background 300ms;
+}
+
+.badge.running .badgeDot {
+  background: var(--accent-emerald);
+  box-shadow: 0 0 8px rgba(0, 255, 163, 0.6);
+  animation: badge-pulse 0.9s ease-in-out infinite;
+}
+
+.badge.done .badgeDot {
+  background: var(--accent-emerald);
+}
+
+.badge.skipped .badgeDot {
+  background: var(--text-muted);
+}
+
+.badge.partial .badgeDot {
+  background: var(--accent-amber);
+  box-shadow: 0 0 6px rgba(255, 181, 71, 0.45);
+}
+
+.badge.partial {
+  color: var(--accent-amber);
+}
+
+.badge.insight.running .badgeDot {
+  background: var(--accent-amber);
+  box-shadow: 0 0 8px rgba(255, 181, 71, 0.55);
+}
+.badge.insight.done .badgeDot {
+  background: var(--accent-amber);
+}
+
+.badge.running {
+  color: var(--text-primary);
+}
+.badge.insight.running {
+  color: var(--accent-amber);
+}
+
+.divider {
+  color: var(--text-muted);
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+  scrollbar-width: thin;
+}
+
+.chips::-webkit-scrollbar {
+  height: 4px;
+}
+
+.empty {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.meta {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.time {
+  color: var(--text-primary);
+}
+
+.cost {
+  color: var(--accent-emerald);
+}
+
+@keyframes badge-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 1024px) {
+  .bar {
+    left: 16px;
+    right: 16px;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+  }
+  .meta {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+}

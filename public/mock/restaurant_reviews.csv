@@ -1,0 +1,41 @@
+district,cuisine,avg_price,rating,review_count,open_year,delivery_available
+Chaoyang,Chinese - Northern,38,4.2,1250,2015,True
+Haidian,Chinese - Jiangzhe,128,4.6,3480,2012,True
+Xicheng,Chinese - Sichuan,89,4.4,2156,2018,True
+Chaoyang,Japanese,168,4.7,1890,2019,False
+Dongcheng,Chinese - Cantonese,58,4.1,897,2016,True
+Chaoyang,Korean,118,4.3,1567,2017,True
+Haidian,Indian,95,4.0,568,2020,True
+Chaoyang,Italian,268,4.8,1245,2014,False
+Fengtai,Chinese - Northeastern,45,3.9,1890,2013,True
+Chaoyang,Chinese - Cantonese,78,4.5,2345,2011,True
+Chaoyang,Mexican,158,4.2,456,2021,False
+Haidian,Japanese,68,3.8,1678,2010,True
+Dongcheng,Chinese - Sichuan,65,4.3,1234,2015,True
+Chaoyang,French,188,4.6,789,2019,False
+Haidian,Vietnamese,48,4.0,2134,2014,True
+Xicheng,Chinese - Jiangzhe,108,4.5,1456,2016,True
+Chaoyang,Thai,88,4.1,987,2018,True
+Fengtai,Chinese - Sichuan,55,3.7,2890,2012,True
+Chaoyang,Western,298,4.7,1567,2017,False
+Dongcheng,Chinese - Northern,198,4.6,4567,2008,True
+Chaoyang,Japanese,368,4.9,892,2018,False
+Haidian,Chinese - Northern,18,4.0,3456,2009,True
+Chaoyang,Spanish,188,4.4,567,2020,False
+Chaoyang,Chinese - Cantonese,128,4.5,1789,2016,True
+Fengtai,Chinese - Yunnan,42,4.1,1567,2015,True
+Haidian,Japanese,198,4.2,678,2019,False
+Chaoyang,Chinese - Sichuan,28,3.9,2890,2014,True
+Chaoyang,Middle Eastern,78,4.0,456,2021,True
+Xicheng,Chinese - Cantonese,148,4.7,1234,2013,True
+Chaoyang,Chinese - Jiangzhe,118,4.5,987,2017,True
+Fengtai,Chinese - Xinjiang,98,4.3,1456,2014,True
+Haidian,Chinese - Jiangzhe,138,4.6,2345,2011,True
+Chaoyang,Japanese,588,4.8,345,2018,False
+Dongcheng,Chinese - Halal,88,4.4,3456,2010,True
+Chaoyang,Portuguese,35,4.0,1789,2019,True
+Chaoyang,Chinese - Jiangzhe,68,4.2,1234,2015,True
+Haidian,Chinese - Shandong,42,3.8,892,2016,True
+Chaoyang,German,168,4.1,456,2020,False
+Chaoyang,Chinese - Cantonese,78,4.5,4567,2008,True
+Chaoyang,Chinese - Creative,228,4.7,678,2021,False
