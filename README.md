@@ -1,7 +1,5 @@
 # CSV Analyze
 
-**Language:** English | [简体中文](./README_zh-CN.md)
-
 A two-agent CSV analysis app on EdgeOne Makers — uploads a CSV, generates Vega-Lite charts, and writes data-driven insights, all streamed back over SSE. Built on the Claude Agent SDK.
 
 **Framework:** Claude Agent SDK · **Category:** File Processing <!-- TODO: confirm --> · **Language:** TypeScript
