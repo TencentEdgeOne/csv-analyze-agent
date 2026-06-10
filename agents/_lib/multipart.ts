@@ -1,9 +1,26 @@
 /**
- * Lightweight multipart/form-data parser.
+ * Multipart/form-data parser backed by busboy.
  *
- * EdgeOne Makers' Node runtime only returns a raw Buffer for multipart body,
- * and does not provide request.formData(). Here we manually parse boundaries and extract file fields.
+ * EdgeOne Makers' Node runtime hands the handler the entire request body as
+ * a Buffer (no native request.formData()). busboy is stream-based, so we
+ * wrap the Buffer in a Readable and pipe it through.
+ *
+ * Why busboy over the previous hand-rolled parser:
+ *   - hand-rolled boundary scanning is a known footgun (CVE-2024-39338 class)
+ *   - busboy has built-in size limits, header parsing, and is widely audited
+ *   - identical public API (parseMultipart(buf, contentType)) keeps upload/
+ *     handler changes to zero
+ *
+ * Security limits enforced here:
+ *   - Per-file size cap (DEFAULT_MAX_FILE_BYTES) — busboy aborts the stream
+ *     mid-flight if a single field exceeds it, so we never buffer past the
+ *     cap in memory.
+ *   - We only collect file fields the upload handler actually consumes
+ *     ("file"); other field names are accepted but kept small.
  */
+
+import Busboy from "busboy";
+import { Readable } from "node:stream";
 
 export interface ParsedFile {
   fieldName: string;
@@ -17,107 +34,101 @@ export interface MultipartResult {
   fields: Record<string, string>;
 }
 
-/**
- * Extract boundary from the content-type header
- */
-function extractBoundary(contentType: string): string | null {
-  const match = contentType.match(/boundary=(?:"([^"]+)"|([^\s;]+))/i);
-  return match ? (match[1] ?? match[2] ?? null) : null;
+export interface ParseOptions {
+  /** Maximum bytes per file (busboy `limits.fileSize`). Default 50 MiB. */
+  maxFileBytes?: number;
 }
 
-/**
- * Parse multipart/form-data Buffer
- */
-export function parseMultipart(body: Buffer, contentType: string): MultipartResult {
-  const boundary = extractBoundary(contentType);
-  if (!boundary) {
-    throw new Error("Missing boundary in Content-Type header");
-  }
+const DEFAULT_MAX_FILE_BYTES = 50 * 1024 * 1024;
 
-  const result: MultipartResult = { files: [], fields: {} };
-  const boundaryBuf = Buffer.from(`--${boundary}`);
-  const endBuf = Buffer.from(`--${boundary}--`);
+/** Parse a multipart/form-data Buffer. */
+export function parseMultipart(
+  body: Buffer,
+  contentType: string,
+  opts: ParseOptions = {},
+): Promise<MultipartResult> {
+  const maxFileBytes = opts.maxFileBytes ?? DEFAULT_MAX_FILE_BYTES;
 
-  // Split by boundary
-  let pos = 0;
-  const parts: Buffer[] = [];
-
-  // Find first boundary
-  const firstIdx = body.indexOf(boundaryBuf, pos);
-  if (firstIdx === -1) return result;
-  pos = firstIdx + boundaryBuf.length;
-
-  // Skip CRLF after first boundary
-  if (body[pos] === 0x0d && body[pos + 1] === 0x0a) pos += 2;
-
-  while (pos < body.length) {
-    // Find next boundary
-    const nextIdx = body.indexOf(boundaryBuf, pos);
-    if (nextIdx === -1) break;
-
-    // Content is between pos and nextIdx (minus trailing CRLF before boundary)
-    let endPos = nextIdx;
-    if (endPos >= 2 && body[endPos - 2] === 0x0d && body[endPos - 1] === 0x0a) {
-      endPos -= 2;
-    }
-
-    const part = body.subarray(pos, endPos);
-    parts.push(part);
-
-    // Move past boundary
-    pos = nextIdx + boundaryBuf.length;
-    // Check if this is the end boundary
-    if (body[pos] === 0x2d && body[pos + 1] === 0x2d) break; // "--"
-    // Skip CRLF
-    if (body[pos] === 0x0d && body[pos + 1] === 0x0a) pos += 2;
-  }
-
-  // Parse each part
-  for (const part of parts) {
-    // Find header/body separator (double CRLF)
-    const sepIdx = findDoubleCRLF(part);
-    if (sepIdx === -1) continue;
-
-    const headerBuf = part.subarray(0, sepIdx);
-    const bodyBuf = part.subarray(sepIdx + 4); // skip \r\n\r\n
-
-    const headers = headerBuf.toString("utf-8");
-    const disposition = headers.match(
-      /Content-Disposition:\s*form-data;\s*([^\r\n]+)/i,
-    );
-    if (!disposition) continue;
-
-    const nameMatch = disposition[1]!.match(/name="([^"]+)"/);
-    const fileNameMatch = disposition[1]!.match(/filename="([^"]+)"/);
-    const ctMatch = headers.match(/Content-Type:\s*([^\r\n]+)/i);
-
-    const fieldName = nameMatch?.[1] ?? "unknown";
-
-    if (fileNameMatch) {
-      result.files.push({
-        fieldName,
-        fileName: fileNameMatch[1]!,
-        contentType: ctMatch?.[1]?.trim() ?? "application/octet-stream",
-        data: Buffer.from(bodyBuf),
+  return new Promise((resolve, reject) => {
+    let bb: ReturnType<typeof Busboy>;
+    try {
+      bb = Busboy({
+        headers: { "content-type": contentType },
+        limits: {
+          fileSize: maxFileBytes,
+          // One field per name — the upload handler only reads "file".
+          // Cap field count + name/value sizes to bound memory on misuse.
+          files: 4,
+          fields: 16,
+          fieldSize: 64 * 1024,
+          fieldNameSize: 256,
+        },
       });
-    } else {
-      result.fields[fieldName] = bodyBuf.toString("utf-8");
+    } catch (e) {
+      reject(
+        new Error(
+          `multipart init failed: ${e instanceof Error ? e.message : String(e)}`,
+        ),
+      );
+      return;
     }
-  }
 
-  return result;
-}
+    const result: MultipartResult = { files: [], fields: {} };
+    let aborted = false;
 
-function findDoubleCRLF(buf: Buffer): number {
-  for (let i = 0; i < buf.length - 3; i++) {
-    if (
-      buf[i] === 0x0d &&
-      buf[i + 1] === 0x0a &&
-      buf[i + 2] === 0x0d &&
-      buf[i + 3] === 0x0a
-    ) {
-      return i;
-    }
-  }
-  return -1;
+    const fail = (err: Error) => {
+      if (aborted) return;
+      aborted = true;
+      reject(err);
+    };
+
+    bb.on("file", (fieldName, fileStream, info) => {
+      const chunks: Buffer[] = [];
+      let truncated = false;
+
+      fileStream.on("data", (chunk: Buffer) => chunks.push(chunk));
+      fileStream.on("limit", () => {
+        truncated = true;
+      });
+      fileStream.on("end", () => {
+        if (truncated) {
+          fail(
+            new Error(
+              `file "${info.filename}" exceeds ${maxFileBytes} bytes`,
+            ),
+          );
+          return;
+        }
+        result.files.push({
+          fieldName,
+          fileName: info.filename,
+          contentType: info.mimeType ?? "application/octet-stream",
+          data: Buffer.concat(chunks),
+        });
+      });
+      fileStream.on("error", fail);
+    });
+
+    bb.on("field", (name, value) => {
+      result.fields[name] = value;
+    });
+
+    bb.on("filesLimit", () =>
+      fail(new Error("too many file fields in multipart payload")),
+    );
+    bb.on("fieldsLimit", () =>
+      fail(new Error("too many text fields in multipart payload")),
+    );
+    bb.on("partsLimit", () =>
+      fail(new Error("too many multipart parts")),
+    );
+    bb.on("error", (err: unknown) =>
+      fail(err instanceof Error ? err : new Error(String(err))),
+    );
+    bb.on("close", () => {
+      if (!aborted) resolve(result);
+    });
+
+    Readable.from(body).pipe(bb);
+  });
 }

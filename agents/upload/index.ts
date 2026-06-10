@@ -2,7 +2,7 @@
  * POST /upload — File upload handler
  *
  * EdgeOne Makers provides context.request.body as a raw Buffer for multipart requests;
- * manual parsing is required.
+ * we adapt it into a stream and feed busboy via parseMultipart.
  */
 import path from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -20,6 +20,17 @@ import { computeColumnDistributions } from "../_lib/column-distribution.js";
 import { parseMultipart } from "../_lib/multipart.js";
 import { appendAnalysisHistory } from "../_lib/history.js";
 
+/**
+ * Hard cap on the entire multipart request body. Anything larger is rejected
+ * with HTTP 413 before we touch busboy or write to disk. This bounds memory
+ * use under abuse — without it, a 5 GB upload would be buffered in full
+ * before any size check.
+ *
+ * Kept aligned with `parseMultipart`'s default per-file cap so neither layer
+ * is the silent bottleneck.
+ */
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+
 export async function onRequest(context: any) {
   const { request } = context;
   const contentType = request.headers?.["content-type"] ?? "";
@@ -33,11 +44,24 @@ export async function onRequest(context: any) {
     return errorResponse("no file body received");
   }
 
+  if (body.length > MAX_UPLOAD_BYTES) {
+    return errorResponse(
+      `upload exceeds ${MAX_UPLOAD_BYTES} bytes (${body.length} bytes received)`,
+      413,
+    );
+  }
+
   let parsed;
   try {
-    parsed = parseMultipart(body, contentType);
+    parsed = await parseMultipart(body, contentType, {
+      maxFileBytes: MAX_UPLOAD_BYTES,
+    });
   } catch (e) {
-    return errorResponse(`multipart parse error: ${e instanceof Error ? e.message : String(e)}`);
+    const msg = e instanceof Error ? e.message : String(e);
+    // Per-file size hits surface as the busboy "limit" path inside parseMultipart;
+    // map them to 413 so the client can distinguish from a malformed body.
+    const status = /exceeds \d+ bytes|too many/.test(msg) ? 413 : 400;
+    return errorResponse(`multipart parse error: ${msg}`, status);
   }
 
   const file = parsed.files.find((f) => f.fieldName === "file");
