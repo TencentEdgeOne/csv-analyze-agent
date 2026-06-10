@@ -212,14 +212,11 @@ function AppInner() {
       setCancelPhase("running");
       const opts = { chartsOnly, demoMode: true };
       lastOptsRef.current = opts;
-      // Order matters: kick off the analyze run first so its short request
-      // releases the runtime's active-run slot, then open the long-lived
-      // SSE stream. If we open the stream first it occupies the
-      // conversationId's active-run slot for the whole run, and the
-      // subsequent /analyze (action=start) hits the runtime's
-      // AGENT_CONFLICT_RUNNING (409) auto-conflict-guard. The backend's
-      // stream handler replays buffered events on subscribe, so there's
-      // no risk of missing the early ones during this small gap.
+      // Order matters: kick off /analyze first so the session transitions
+      // to `running`, then subscribe to the SSE stream. If we subscribe
+      // first the stream attaches to a session that hasn't started yet.
+      // The backend's stream handler replays buffered events on subscribe,
+      // so there's no risk of missing the early ones during this small gap.
       await startAnalyze(result.taskId, opts, conversationIdRef.current);
       connect(result.taskId, conversationIdRef.current);
     },

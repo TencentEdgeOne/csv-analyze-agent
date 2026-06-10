@@ -77,61 +77,19 @@ function conversationHeaders(conversationId?: string): Record<string, string> {
     : {};
 }
 
-/**
- * EdgeOne Makers serializes requests sharing a `makers-conversation-id`
- * header — concurrent requests get HTTP 409. Most of the time the conflict
- * window is tiny (a slow `/history` overlapping a click) so a quick retry
- * is enough.
- *
- * `init` may be passed as a factory `() => RequestInit` so the body can be
- * rebuilt on each attempt. This matters for multipart uploads — a FormData
- * stream is consumed by the first fetch and must be reconstructed before
- * resending. JSON bodies are safe either way.
- *
- * Retries up to `attempts` times on 409 with exponential back-off.
- * AbortError propagates immediately.
- */
-async function fetchWithConflictRetry(
-  input: RequestInfo,
-  init?: RequestInit | (() => RequestInit),
-  attempts = 3,
-): Promise<Response> {
-  const buildInit = typeof init === "function" ? init : () => init ?? {};
-  let lastRes: Response | null = null;
-  for (let i = 0; i < attempts; i++) {
-    const res = await fetch(input, buildInit());
-    if (res.status !== 409) return res;
-    lastRes = res;
-    // 80ms → 240ms → 720ms — short enough for snappy UX, long enough for
-    // a slow /history call (typical 300–600ms) to finish on the server.
-    const delay = 80 * Math.pow(3, i);
-    await new Promise((r) => setTimeout(r, delay));
-  }
-  return lastRes!;
-}
-
 // ─── API functions ──────────────────────────────────────────
 
 export async function uploadCsv(
   file: File,
   conversationId?: string,
 ): Promise<UploadResponse> {
-  // Retries on 409 — when the user clicks a sample dataset right after page
-  // load, /history may still be holding the EdgeOne per-conversation lock
-  // server-side even though we've client-aborted it. Short backoff lets the
-  // lock release before we resend.
-  //
-  // Use the factory form so each attempt rebuilds FormData — its body
-  // stream is consumed by the first fetch and would fail on retry.
-  const res = await fetchWithConflictRetry("/upload", () => {
-    const form = new FormData();
-    form.append("file", file);
-    return {
-      method: "POST",
-      // multipart: don't set Content-Type, browser auto-adds boundary
-      headers: conversationHeaders(conversationId),
-      body: form,
-    };
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch("/upload", {
+    method: "POST",
+    // multipart: don't set Content-Type, browser auto-adds boundary
+    headers: conversationHeaders(conversationId),
+    body: form,
   });
   if (!res.ok) {
     const err = await safeJson(res);
@@ -145,10 +103,7 @@ export async function startAnalyze(
   opts: { chartsOnly?: boolean; model?: string; demoMode?: boolean } = {},
   conversationId?: string,
 ): Promise<void> {
-  // Retries on 409 — startAnalyze fires immediately after upload, and on
-  // first page load the /history request can still be in flight against
-  // the same conversation lock.
-  const res = await fetchWithConflictRetry("/analyze", {
+  const res = await fetch("/analyze", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -200,7 +155,7 @@ export async function cancelAnalyze(
   // legacy /analyze action=cancel route. Safe to call after the stop request
   // — handleCancel is idempotent and just records the cancelled state.
   try {
-    await fetchWithConflictRetry("/analyze", {
+    await fetch("/analyze", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -272,10 +227,8 @@ export async function fetchSession(
 /**
  * Fetch the current conversation's analysis history.
  *
- * Goes to cloud-functions, which is NOT subject to EdgeOne's
- * per-conversation lock (that lock is keyed by `makers-conversation-id`
- * and only applies to agent routes). So no 409-retry, no AbortController
- * dance — a plain fetch is enough.
+ * Goes to cloud-functions, which is stateless and just reads from
+ * the conversation store — a plain fetch is enough.
  */
 export async function fetchAnalysisHistory(
   conversationId: string,
