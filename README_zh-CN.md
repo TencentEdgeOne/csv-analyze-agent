@@ -4,7 +4,7 @@
 
 **Framework：** Claude Agent SDK · **Category：** File Processing <!-- TODO: confirm --> · **Language：** TypeScript
 
-[![Deploy to EdgeOne Makers](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/makers/new?template=csv-analyze-agent&from=within&fromAgent=1&agentLang=typescript)
+[![Deploy to EdgeOne Makers](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://console.cloud.tencent.com/edgeone/pages/new?template=csv-analyze-agent)
 
 <!-- ![preview](./assets/preview.png)  TODO: confirm -->
 
@@ -83,7 +83,7 @@ csv-analyze/
 │   ├── lib/                        # API 客户端、事件类型、格式化
 │   └── types.ts                    # 前端类型子集
 ├── package.json
-├── edgeone.json                     # framework=claude-sdk，agents.timeout=300，sandbox.timeout=300
+├── edgeone.json                     # framework=claude-agent-sdk，agents.timeout=300，sandbox.timeout=300
 └── index.html
 ```
 

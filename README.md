@@ -83,7 +83,7 @@ csv-analyze/
 │   ├── lib/                        # API client, event types, formatters
 │   └── types.ts                    # Frontend type subset
 ├── package.json
-├── edgeone.json                     # framework=claude-sdk, agents.timeout=300, sandbox.timeout=300
+├── edgeone.json                     # framework=claude-agent-sdk, agents.timeout=300, sandbox.timeout=300
 └── index.html
 ```
 
