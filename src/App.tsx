@@ -37,6 +37,7 @@ import { ReportView } from "./components/ReportView";
 import { CancelControl } from "./components/CancelControl";
 import type { CancelPhase } from "./components/CancelControl";
 import GitHubLink from "./components/GitHubLink";
+import DeployLink from "./components/DeployLink";
 import type { ToolInvocation } from "./hooks/useAgentStream";
 import { I18nProvider, LangToggle, useT } from "./i18n";
 
@@ -615,6 +616,7 @@ function AppInner() {
 
       <ToolDrawer tool={drawer} onClose={() => setDrawer(null)} />
       <GitHubLink />
+      <DeployLink />
     </>
   );
 }
