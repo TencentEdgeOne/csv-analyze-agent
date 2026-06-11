@@ -1,5 +1,5 @@
 /**
- * History detail handler — EdgeOne Pages Node Function
+ * History detail handler — EdgeOne Makers Node Function
  * ====================================================
  *
  * File path cloud-functions/history-detail/index.ts maps to
@@ -16,7 +16,7 @@
  * the artifacts shape must agree with the writer in
  * `agents/_lib/history.ts` — keep both sides aligned when fields change.
  *
- * Following the official EdgeOne Pages Node Functions docs:
+ * Following the official EdgeOne Makers Node Functions docs:
  *   - export `onRequestPost` for POST handlers
  *   - read JSON body via `await context.request.json()`
  *   - return a `Response` object

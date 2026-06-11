@@ -72,7 +72,7 @@ csv-analyze/
 │   ├── analyze/download.ts         # POST /analyze/download — report download
 │   ├── analyze/stop.ts             # POST /analyze/stop — abort active run
 │   └── static/index.ts             # POST /static — serve generated SVGs
-├── cloud-functions/                 # Stateless EdgeOne Pages Node Functions
+├── cloud-functions/                 # Stateless EdgeOne Makers Node Functions
 │   ├── history/index.ts            # POST /history — per-conversation analysis records
 │   ├── history-detail/index.ts     # POST /history-detail — full artifacts blob for one taskId
 │   ├── _http.ts                    # Shared HTTP helpers

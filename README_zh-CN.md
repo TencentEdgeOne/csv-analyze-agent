@@ -72,7 +72,7 @@ csv-analyze/
 │   ├── analyze/download.ts         # POST /analyze/download —— 下载报告
 │   ├── analyze/stop.ts             # POST /analyze/stop —— 中断当前 agent
 │   └── static/index.ts             # POST /static —— 提供生成的 SVG
-├── cloud-functions/                 # 无状态的 EdgeOne Pages Node Functions
+├── cloud-functions/                 # 无状态的 EdgeOne Makers Node Functions
 │   ├── history/index.ts            # POST /history —— 按会话拉取分析记录
 │   ├── history-detail/index.ts     # POST /history-detail —— 单 taskId 完整产物
 │   ├── _http.ts                    # 共享 HTTP 工具
